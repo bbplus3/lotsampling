@@ -65,8 +65,8 @@ def findn_hyp(N, D, alp):
 
 # --- Streamlit UI ---
 st.set_page_config(page_title="Sampling Plan Calculator", layout="wide")
-st.title("Creating and Evaluating Sampling Plans")
-st.sidebar.header("Sampling Plan Options")
+st.title("📦 Creating and Evaluating Sampling Plans")
+st.sidebar.header("🔬 Sampling Plan Options")
 
 eord = st.sidebar.radio("Distribution Type", ["binom", "hyp"], format_func=lambda x: {
     "binom": "Binomial / Continuous Lot",
