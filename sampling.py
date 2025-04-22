@@ -68,6 +68,11 @@ st.set_page_config(page_title="Sampling Plan Calculator", layout="wide")
 st.title("📦 Creating and Evaluating Sampling Plans")
 st.sidebar.header("🔬 Sampling Plan Options")
 
+st.markdown("""
+### 🧪 Quality Control Dashboard
+Use this tool to inspect and evaluate lot-based sampling plans. Choose between Binomial or Hypergeometric models, and either calculate required sample sizes or assess plan parameters like AOQL, ERP, and more.
+""")
+
 eord = st.sidebar.radio("Distribution Type", ["binom", "hyp"], format_func=lambda x: {
     "binom": "Binomial / Continuous Lot",
     "hyp": "Hypergeometric / Isolated Lot"
