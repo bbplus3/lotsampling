@@ -39,6 +39,50 @@ def format_percentage(value: float) -> str:
     return f"{value:.2%}"
 
 
+def show_dataframe(frame: pd.DataFrame, **kwargs) -> None:
+    """Display a DataFrame safely.
+
+    Streamlit serializes DataFrames to Arrow via pyarrow for st.dataframe.
+    In some deployed environments a numpy/pyarrow binary mismatch causes a
+    segmentation fault during that conversion, even for ordinary numeric
+    data. To avoid it, we coerce the frame into clean, explicitly-typed
+    values and fall back to a static st.table if the Arrow path still fails.
+    """
+
+    safe = frame.copy()
+
+    # Cast numpy-backed columns to pandas' nullable dtypes, which serialize
+    # to Arrow cleanly, and stringify anything object/complex that doesn't.
+    for column in safe.columns:
+        dtype = str(safe[column].dtype)
+        if dtype.startswith("complex"):
+            safe[column] = safe[column].apply(
+                lambda z: f"{z.real:.6g}"
+                if abs(z.imag) < 1e-9
+                else f"{z.real:.6g}+{z.imag:.6g}i"
+            )
+        elif dtype == "object":
+            safe[column] = safe[column].astype(str)
+        elif dtype.startswith("float"):
+            safe[column] = safe[column].astype("float64")
+        elif dtype.startswith("int"):
+            safe[column] = safe[column].astype("int64")
+
+    # Ensure column names are strings (non-string names can break Arrow).
+    safe.columns = [str(c) for c in safe.columns]
+
+    try:
+        st.dataframe(safe, **kwargs)
+    except Exception:
+        # Last-resort fallback that does not use the Arrow path.
+        display_kwargs = {
+            key: value
+            for key, value in kwargs.items()
+            if key == "use_container_width"
+        }
+        st.table(safe.astype(str))
+
+
 def display_plan_metrics(result) -> None:
     """Display the primary sampling-plan metrics."""
 
@@ -123,7 +167,7 @@ def display_plan_data(result) -> None:
     )
 
     with st.expander("View calculated data"):
-        st.dataframe(
+        show_dataframe(
             results_table,
             use_container_width=True,
             hide_index=True,
@@ -726,16 +770,18 @@ else:
 
                 state_table = pd.DataFrame(
                     {
-                        "State": range(1, states + 1),
-                        "Proportion of Time": result.state_proportions,
-                        "Percentage of Time": (
-                            result.state_proportions * 100
-                        ),
+                        "State": [int(s) for s in range(1, states + 1)],
+                        "Proportion of Time": [
+                            float(p) for p in result.state_proportions
+                        ],
+                        "Percentage of Time": [
+                            float(p) * 100 for p in result.state_proportions
+                        ],
                     }
                 )
 
                 with st.expander("View state allocation"):
-                    st.dataframe(
+                    show_dataframe(
                         state_table,
                         use_container_width=True,
                         hide_index=True,
@@ -751,23 +797,23 @@ else:
                         f"To State {state}"
                         for state in range(1, states + 1)
                     ],
-                )
+                ).astype(float)
 
                 with st.expander("View transition matrix"):
-                    st.dataframe(
+                    show_dataframe(
                         transition_table,
                         use_container_width=True,
                     )
 
                 chain_table = pd.DataFrame(
                     {
-                        "Step": range(len(result.chain)),
-                        "State": result.chain,
+                        "Step": [int(i) for i in range(len(result.chain))],
+                        "State": [int(s) for s in result.chain],
                     }
                 )
 
                 with st.expander("View simulated state sequence"):
-                    st.dataframe(
+                    show_dataframe(
                         chain_table,
                         use_container_width=True,
                         hide_index=True,
@@ -864,16 +910,20 @@ else:
 
                 escape_table = pd.DataFrame(
                     {
-                        "Run": range(1, runs + 1),
-                        "Process State": result.process_states,
-                        "Generated Defects": result.defects,
-                        "Caught Defects": result.catches,
-                        "Escaped Defects": result.escapes,
+                        "Run": [int(i) for i in range(1, runs + 1)],
+                        "Process State": [
+                            int(s) for s in result.process_states
+                        ],
+                        "Generated Defects": [
+                            int(d) for d in result.defects
+                        ],
+                        "Caught Defects": [int(c) for c in result.catches],
+                        "Escaped Defects": [int(e) for e in result.escapes],
                     }
                 )
 
                 with st.expander("View escape simulation data"):
-                    st.dataframe(
+                    show_dataframe(
                         escape_table,
                         use_container_width=True,
                         hide_index=True,
