@@ -1,68 +1,34 @@
-\# lotsampling
-
-
+# lotsampling
 
 A Python library for creating, evaluating, and visualizing zero-acceptance acceptance sampling plans.
 
+## Features
 
+- Binomial sampling plans
+- Hypergeometric sampling plans
+- AOQL calculations
+- Operating Characteristic (OC) curves
+- Streamlit demo application
 
-\## Features
-
-
-
-\- Binomial sampling plans
-
-\- Hypergeometric sampling plans
-
-\- AOQL calculations
-
-\- Operating Characteristic (OC) curves
-
-\- Streamlit demo application
-
-
-
-\## Installation
-
-
+## Installation
 
 ```bash
-
 pip install lotsampling
-
 ```
 
-
-
-\## Example
-
-
+## Example
 
 ```python
+from lotsampling import evaluate_binomial_plan
 
-from lotsampling import evaluate\_binomial\_plan
-
-
-
-result = evaluate\_binomial\_plan(
-
-&#x20;   sample\_size=30,
-
-&#x20;   lot\_size=500,
-
+result = evaluate_binomial_plan(
+    sample_size=30,
+    lot_size=500,
 )
 
-
-
 print(result.aoql)
-
 ```
 
-
-
-\## License
-
-
+## License
 
 MIT
-
